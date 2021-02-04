@@ -1,0 +1,122 @@
+---
+title: "Estimator Properites"
+author: "Samantha-Jo Caetano"
+date: "February 3 or 4 2021"
+output: pdf_document
+---
+
+Unbiased estimators from the videos: $$T_1 = 2\bar{X}_n - 1$$ 
+$$ T_2 = \frac{n+1}{n} M_n -1 $$
+
+Another unbiased estimator:
+$$T_3 = 2X_1-1 $$
+
+Variance of $T_3$:
+ $$Var(T_3) = \frac{(N+1)(N-1)}{12} $$
+
+
+```{r german-1,warning=FALSE,message=FALSE}
+library(tidyverse)
+library(patchwork)
+set.seed(432354675)
+# Functions to compute the estimators
+T1 <- function(x) 2 * mean(x) - 1
+T2 <- function(x) ( (length(x) + 1)/length(x) ) * max(x) - 1
+T3 <- function(x) {2*x[1]-1}
+  
+  
+
+N <- 1000
+n <- 100
+M <- 1000 # One million simulations
+
+
+thesimulations <- list(
+  T1 = numeric(M),
+  T2 = numeric(M),
+  T3 = numeric(M)
+)
+for (i in 1:M) {
+  # Do the simulation
+  # Sample from a discrete uniform (?sample.int):
+  thesample <- sample.int(N,n,replace = FALSE)
+  # Record the values of the two estimators:
+  thesimulations$T1[i] <- T1(thesample)
+  thesimulations$T2[i] <- T2(thesample)
+  thesimulations$T3[i] <- T3(thesample)
+}
+
+# Evaluate the bias of T1 and T2 and T3:
+mean(thesimulations$T1) - N
+mean(thesimulations$T2) - N
+mean(thesimulations$T3) - N
+
+```
+
+
+Finally, let's look at the sampled values of $T_{1}$, $T_{2}$ and $T_{3}$:
+
+```{r plots1}
+# Recreate the plots in Figure 20.1:
+leftplot <- tibble(T1 = thesimulations$T1) %>%
+  ggplot(aes(x = T1)) +
+  theme_classic() + 
+  geom_histogram(aes(y = ..density..),bins = 30,colour = "black",fill = "transparent") +
+  scale_x_continuous(breaks = c(300,700,1000,1300,1600)) +
+  coord_cartesian(xlim = c(300,1600))
+
+midplot <- tibble(T2 = thesimulations$T2) %>%
+  ggplot(aes(x = T2)) +
+  theme_classic() + 
+  geom_histogram(aes(y = ..density..),bins = 30,colour = "black",fill = "transparent") +
+  scale_x_continuous(breaks = c(300,700,1000,1300,1600)) +
+  coord_cartesian(xlim = c(300,1600))
+
+
+rightplot <- tibble(T3 = thesimulations$T3) %>%
+  ggplot(aes(x = T3)) +
+  theme_classic() + 
+  geom_histogram(aes(y = ..density..),bins = 30,colour = "black",fill = "transparent") +
+  scale_x_continuous(breaks = c(300,700,1000,1300,1600)) +
+  coord_cartesian(xlim = c(300,1600))
+
+leftplot | midplot | rightplot
+```
+
+
+
+
+## Mean Squared Error
+
+
+
+```{r simsagain}
+
+mse <- function(x) var(x) + (mean(x) - N)^2
+
+```
+
+Bias of the 3 estimators:
+
+```{r bias1}
+mean(thesimulations$T1) - N
+mean(thesimulations$T2) - N
+mean(thesimulations$T3) - N
+```
+
+Variance of the 3 estimators:
+
+```{r var1}
+var(thesimulations$T1)
+var(thesimulations$T2)
+var(thesimulations$T3)
+```
+
+...and hence its MSE is far better than $T_{1}$...
+
+```{r mse1}
+mse(thesimulations$T1)
+mse(thesimulations$T2)
+mse(thesimulations$T3)
+```
+
